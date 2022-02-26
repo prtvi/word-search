@@ -68,7 +68,11 @@ class word:
             for col in range(self.cols):
                 found, dir = self.search(row, col, grid)
                 if found:
-                    print(f"{self.word}: ({col}, {row})")
+                    end_col = col + self.directions[dir][0] * (self.len - 1)
+                    end_row = row + self.directions[dir][1] * (self.len - 1)
+
+                    print(
+                        f"{self.word}: ({col}, {row}) -> ({end_col}, {end_row})")
 
 
 for w in words:
