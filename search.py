@@ -17,7 +17,7 @@ words = ['ruby', 'blocks', 'heredocs', 'classes', 'iterator', 'module',
          'objects', 'flexible', 'each', 'happy', 'mutable', 'lambda', 'hash', 'array']
 
 
-class word:
+class Word:
 
     def __init__(self, word: str) -> None:
 
@@ -32,14 +32,14 @@ class word:
             4: (-1, 0), 6: (1, 0),
             7: (-1, 1),  8: (0, 1), 9: (1, 1)
         }
-        self.dir = None
+        self.direction = None
 
-    def search(self, row: int, col: int, grid: list) -> None:
+    def search(self, row: int, col: int, grid: list) -> bool:
 
         if grid[row][col] != self.word[0]:
             return False, False
 
-        for dir, (y, x) in self.directions.items():
+        for direction, (y, x) in self.directions.items():
 
             rd, cd = row + x, col + y
             flag = True
@@ -54,8 +54,8 @@ class word:
                     break
 
             if flag:
-                self.dir = dir
-                return True, self.dir
+                self.direction = direction
+                return True, self.direction
 
         return False, False
 
@@ -75,5 +75,7 @@ class word:
                         f"{self.word}: ({col}, {row}) -> ({end_col}, {end_row})")
 
 
-for w in words:
-    word(w).pattern_search(grid)
+if __name__ == '__main__':
+
+    for w in words:
+        Word(w).pattern_search(grid)
