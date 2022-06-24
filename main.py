@@ -2,26 +2,28 @@ import cv2
 import numpy as np
 from keras.models import load_model
 
+from search import WordSearch
+from utils import *
+
+
 # load model
 saved_model_path = 'model/letters_classifier.keras'
 model = load_model(saved_model_path)
 
-# image dimensions
-puzzle = 'assets/puzzle2.png'
+# input files
+puzzle = 'assets/puzzle1.png'
+puzzleWords = 'assets/puzzle1words.txt'
 
+# input grid dimensions
+nRows, nCols = (10, 10)
+
+# image dimensions
 hInputImg, wInputImg = (500, 500)
 hDatasetImg, wDatasetImg = (28, 28)
 
-# input grid dimensions
-nRows, nCols = (14, 14)
-
-# prediction confidence thresholds
-confidence_lt = 0.25
-confidence_ut = 1.00
-
-
-def getAlphabetMapping():
-    return {num: chr(char) for (num, char) in zip(list(range(0, 26)), list(range(65, 65+26)))}
+# thresholds for contour's width to height ratio
+contourMin = 0.25
+contourMax = 1.00
 
 
 def predictionPreprocessing(img):
@@ -31,7 +33,7 @@ def predictionPreprocessing(img):
 
 
 def getContours(imgPath, inputImgH, inputImgW):
-    '''Read the image and return the found contours & gray scale image'''
+    '''Read the image and return the found contours, resized image & gray scale image'''
 
     img = cv2.imread(imgPath)
     img = cv2.resize(img, (inputImgH, inputImgW))
@@ -44,7 +46,7 @@ def getContours(imgPath, inputImgH, inputImgW):
     contours = cv2.findContours(
         dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
 
-    return contours, gray
+    return contours, img, gray
 
 
 def getCoordsAndLabels(contours, grayImg, datasetImgH, datasetImgW, trainedModel):
@@ -57,7 +59,7 @@ def getCoordsAndLabels(contours, grayImg, datasetImgH, datasetImgW, trainedModel
     for i, cnt in enumerate(contours):
         x, y, w, h = cv2.boundingRect(cnt)
 
-        if confidence_lt <= (w/h) <= confidence_ut:
+        if contourMin <= (w/h) <= contourMax:
 
             letter = grayImg[y:y+h, x:x+w]
             letter = cv2.resize(letter, (datasetImgH, datasetImgW))
@@ -111,10 +113,17 @@ def getGrid(coordsLabels, cols):
 
 if __name__ == '__main__':
 
-    contours, grayImg = getContours(puzzle, hInputImg, wInputImg)
+    contours, img, grayImg = getContours(puzzle, hInputImg, wInputImg)
+
     coordsAndLabels = getCoordsAndLabels(
         contours, grayImg, hDatasetImg, wDatasetImg, model)
     coordsAndLabels = normalizeYAndSort(coordsAndLabels)
-    grid = getGrid(coordsAndLabels, nCols)
 
-    print(grid)
+    grid = getGrid(coordsAndLabels, nCols)
+    words = readWordsFromFile(puzzleWords)
+
+    WS = WordSearch(words, grid)
+    foundWords, summary = WS.findAll()
+
+    print(foundWords)
+    print(summary)
